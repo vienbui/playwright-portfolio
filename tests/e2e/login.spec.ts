@@ -27,16 +27,15 @@ test.describe('Login', () => {
     await loginPage.assertLoginErrorVisible();
   });
 
-  test('should logout successfully', async ({ page, loginPage }) => {
-    await loginPage.navigate();
-    await loginPage.login(USERS.valid.email, USERS.valid.password);
-  
+  test('should logout successfully', async ({ authenticatedPage, page }) => {
     await expect(
-      page.locator('a').filter({ hasText: /logged in as/i })
-    ).toBeVisible({ timeout: 15_000 });
-  
-    await page.locator('a[href="/logout"]').click();
-    await expect(page).toHaveURL(/login/);
+      page.locator('a').filter({ hasText: /logged in as/i }),
+      'User should be logged in before logout'
+    ).toBeVisible({ timeout: 10_000 });
+
+    await authenticatedPage.logout();
+
+    await expect(page, 'Should redirect to login page after logout').toHaveURL(/login/);
   });
 
   test('should redirect to login when accessing protected page unauthenticated', async ({ page }) => {

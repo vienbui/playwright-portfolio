@@ -52,6 +52,7 @@ jobs:
           BASE_URL: ${{ vars.BASE_URL || 'https://automationexercise.com' }}
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          TEST_NAME: ${{ secrets.TEST_NAME }}
           CI: true
 
       - name: Upload test report
