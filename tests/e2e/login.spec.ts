@@ -27,12 +27,15 @@ test.describe('Login', () => {
     await loginPage.assertLoginErrorVisible();
   });
 
-  test('should logout successfully', async ({ authenticatedPage, page }) => {
-    // authenticatedPage fixture logs in automatically
-    await authenticatedPage.assertLoggedIn(CREDENTIALS.validUser.name);
-    await authenticatedPage.logout();
-
-    // Assert redirected to login page
+  test('should logout successfully', async ({ page, loginPage }) => {
+    await loginPage.navigate();
+    await loginPage.login(USERS.valid.email, USERS.valid.password);
+  
+    await expect(
+      page.locator('a').filter({ hasText: /logged in as/i })
+    ).toBeVisible({ timeout: 15_000 });
+  
+    await page.locator('a[href="/logout"]').click();
     await expect(page).toHaveURL(/login/);
   });
 
