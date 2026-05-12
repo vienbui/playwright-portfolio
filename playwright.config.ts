@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 import { BASE_URL, API_BASE_URL } from './config/env';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -37,16 +37,20 @@ export default defineConfig({
   },
 
   projects: [
-    // --- UI Projects ---
+    // --- StorageState setup project ---
     {
-      name: 'chromium',
-      testMatch: 'tests/e2e/**/*.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'setup',
+      testMatch: 'tests/auth.setup.ts',
     },
+
+    // --- Authenticated E2E project ---
     {
-      name: 'firefox',
+      name: 'authenticated',
       testMatch: 'tests/e2e/**/*.spec.ts',
-      use: { ...devices['Desktop Firefox'] },
+      dependencies: ['setup'],
+      use: {
+        storageState: 'playwright/.auth/user.json',
+      },
     },
 
     // --- API Project (no browser needed) ---

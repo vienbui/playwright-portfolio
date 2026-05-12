@@ -47,7 +47,7 @@ jobs:
 
       - name: Run E2E tests
         if: matrix.test-type == 'e2e'
-        run: npx playwright test tests/e2e --project=chromium
+        run: npx playwright test --project=setup --project=authenticated
         env:
           BASE_URL: ${{ vars.BASE_URL || 'https://automationexercise.com' }}
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}

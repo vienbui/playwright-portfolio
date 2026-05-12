@@ -1,9 +1,8 @@
-import { test as base, expect, APIRequestContext } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { HomePage } from '../pages/HomePage';
 import { ProductPage } from '../pages/ProductPage';
 import { CartPage } from '../pages/CartPage';
-import { CREDENTIALS } from '../config/env';
 
 /**
  * Type declaration for all custom fixtures.
@@ -13,7 +12,7 @@ type PageFixtures = {
   homePage: HomePage;
   productPage: ProductPage;
   cartPage: CartPage;
-  authenticatedPage: HomePage; // HomePage after login
+  authenticatedPage: HomePage;
 };
 
 /**
@@ -41,39 +40,8 @@ export const test = base.extend<PageFixtures>({
     await use(new CartPage(page));
   },
 
-  /**
-   * authenticatedPage fixture:
-   * Automatically logs in before the test and provides a ready HomePage.
-   * Skips login UI — faster and more reliable than repeating login in each test.
-   */
   authenticatedPage: async ({ page }, use) => {
-    const loginPage = new LoginPage(page);
-    const homePage = new HomePage(page);
-
-    await loginPage.navigate();
-    await loginPage.login(
-      CREDENTIALS.validUser.email,
-      CREDENTIALS.validUser.password
-    );
-
-    if (await loginPage.loginErrorMessage.isVisible()) {
-      throw new Error(
-        'Authenticated fixture failed: invalid TEST_EMAIL/TEST_PASSWORD credentials.'
-      );
-    }
-
-    // Wait until login is confirmed
-    await expect(
-      page.locator('a').filter({ hasText: /logged in as/i }),
-      'Login should succeed before test starts'
-    ).toBeVisible({ timeout: 10_000 });
-
-    await use(homePage);
-
-    // Teardown: logout after test
-    await homePage.logout().catch(() => {
-      // Ignore if logout fails (e.g. page already closed)
-    });
+    await use(new HomePage(page));
   },
 });
 
