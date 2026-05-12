@@ -1,0 +1,70 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Playwright Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Run E2E and API tests as separate jobs in parallel
+        test-type: [e2e, api]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        # Only install browsers for E2E tests — API tests don't need them
+        if: matrix.test-type == 'e2e'
+        run: npx playwright install --with-deps chromium firefox
+
+      - name: Run API tests
+        if: matrix.test-type == 'api'
+        run: npx playwright test tests/api --project=api
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://reqres.in' }}
+
+      - name: Run E2E tests
+        if: matrix.test-type == 'e2e'
+        run: npx playwright test tests/e2e --project=chromium
+        env:
+          BASE_URL: ${{ vars.BASE_URL || 'https://automationexercise.com' }}
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          CI: true
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()  # Upload report even if tests fail
+        with:
+          name: playwright-report-${{ matrix.test-type }}
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload test results (on failure)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ matrix.test-type }}
+          path: test-results/
+          retention-days: 7
